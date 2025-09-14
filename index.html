@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>負數加減｜數線練習與測驗</title>
+<style>
+  :root{
+    --bg:#fff8fb;
+    --card:#ffffff;
+    --primary:#7c5cff;
+    --accent:#ff82b1;
+    --ink:#2b2b2b;
+    --muted:#7a7a7a;
+    --good:#17b26a;
+    --bad:#ef4444;
+    --gold:#f5b301;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: "Noto Sans TC", system-ui, -apple-system, Segoe UI, Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(180deg,var(--bg),#f8fbff);
+    color:var(--ink);
+  }
+  header{
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+    padding:16px 20px; position:sticky; top:0; backdrop-filter: blur(6px);
+    background:rgba(255,255,255,0.7); border-bottom:1px solid #eee;
+  }
+  .brand{display:flex; gap:10px; align-items:center;}
+  .brand .logo{
+    width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
+    background: radial-gradient(circle at 30% 30%, #ffd9e8, #d9e4ff);
+    box-shadow: 0 6px 16px rgba(124,92,255,0.25) inset;
+    font-size:22px;
+  }
+  .brand h1{font-size:18px; margin:0;}
+  .toolbar{display:flex; gap:10px; align-items:center;}
+  .pill{
+    background:var(--card); border:1px solid #eee; padding:8px 12px; border-radius:999px;
+    display:flex; align-items:center; gap:8px;
+  }
+  input[type="text"]{
+    border:none; outline:none; background:transparent; min-width:120px; font-size:14px;
+  }
+  button, .btn{
+    cursor:pointer; border:none; padding:10px 14px; border-radius:12px; font-weight:600;
+    background:var(--primary); color:white; box-shadow:0 6px 16px rgba(124,92,255,0.25);
+    transition: transform .06s ease;
+  }
+  button.ghost{background:#f2f2ff; color:#4b4bb5; box-shadow:none}
+  button.flat{background:#efefef; color:#333; box-shadow:none}
+  button:active{transform: translateY(1px)}
+  .layout{
+    display:grid; grid-template-columns: 1fr 380px; gap:18px; padding:18px; max-width:1200px; margin:0 auto;
+  }
+  @media (max-width: 980px){
+    .layout{grid-template-columns: 1fr}
+  }
+  .card{
+    background:var(--card); border:1px solid #eee; border-radius:18px; padding:16px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+  }
+  .scorebar{
+    display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:12px;
+  }
+  .chip{
+    background:#f7f7ff; border:1px dashed #d7d7ff; border-radius:12px; padding:10px; text-align:center;
+    font-weight:700; color:#4b4bb5;
+  }
+  .big-op{
+    font-size: clamp(22px, 2.2vw, 26px);
+    display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0 12px;
+  }
+  .big-op .bubble{
+    background:#fff4f9; border:2px solid #ffd6ea; color:#c84580; font-weight:800;
+    padding:8px 12px; border-radius:12px;
+  }
+  .numline-wrap{
+    background: #fff9fb;
+    border:1px dashed #ffd0e6; border-radius:16px; padding:10px; margin:10px 0 4px;
+  }
+  svg{width:100%; height:auto;}
+  .answer-row{
+    display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap;
+  }
+  .answer-row input[type="number"]{
+    width:110px; padding:10px; border-radius:12px; border:1px solid #ddd; font-size:18px; font-weight:700;
+  }
+  .result-msg{min-height:24px; font-weight:800;}
+  .ok{color:var(--good)} .ng{color:var(--bad)}
+  .mode-tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+  .mode-tabs button{background:#ffeefe; color:#7b3a6a}
+  .mode-tabs button.active{background:var(--accent); color:#fff}
+  .right-col .section{margin-bottom:14px}
+  .list{display:flex; flex-direction:column; gap:8px; max-height:360px; overflow:auto}
+  .list .row{
+    display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; padding:8px 12px; border:1px solid #eee; border-radius:10px;
+  }
+  .tiny{font-size:12px; color:var(--muted)}
+  .meter{height:8px; background:#eee; border-radius:999px; overflow:hidden}
+  .meter > div{height:100%; background: linear-gradient(90deg, #a4b5ff, #ff9bd3)}
+  .label{font-size:12px; color:var(--muted)}
+  .hidden{display:none !important}
+  .rank-medal{font-size:20px}
+  .footer-note{font-size:12px; color:var(--muted); text-align:center; margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">➕</div>
+    <h1>負數加減｜數線練功房</h1>
+  </div>
+  <div class="toolbar">
+    <div class="pill">
+      <span>👤 名稱</span>
+      <input id="nickname" type="text" placeholder="輸入你的暱稱…" />
+    </div>
+    <button id="btnSettings" class="ghost">⚙️ 設定</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- 主練習區 -->
+  <main class="card">
+    <div class="mode-tabs">
+      <button data-mode="practice" class="active">🌱 練習（有數線）</button>
+      <button data-mode="review">🧩 錯題複習</button>
+      <button data-mode="exam">🎯 測驗（無數線）</button>
+    </div>
+
+    <div class="scorebar">
+      <div class="chip">⭐ 分數 <span id="score">0</span></div>
+      <div class="chip">🔥 連擊 <span id="streak">0</span></div>
+      <div class="chip">🎓 熟練度 <span id="mastery">0%</span></div>
+      <div class="chip">🏆 最高分 <span id="best">0</span></div>
+    </div>
+
+    <div class="big-op">
+      <div class="bubble" id="opA">-3</div>
+      <div class="bubble" id="opSign">-</div>
+      <div class="bubble" id="opB">2</div>
+      <div class="bubble">=</div>
+      <div>
+        <input id="answer" type="number" inputmode="numeric" />
+      </div>
+      <button id="btnSubmit">送出</button>
+      <button id="btnSkip" class="flat">略過</button>
+    </div>
+
+    <div id="numlineWrap" class="numline-wrap">
+      <div class="label">數線提示</div>
+      <svg id="numline" viewBox="0 0 800 150" preserveAspectRatio="xMidYMid meet" role="img" aria-label="數線顯示"></svg>
+    </div>
+
+    <div class="answer-row">
+      <div id="resultMsg" class="result-msg"></div>
+      <button id="btnNext" class="hidden">下一題 ▶</button>
+      <button id="btnShowSteps" class="ghost hidden">顯示步驟</button>
+    </div>
+
+    <div class="footer-note">提示：可在右上 ⚙️ 設定調整「數值範圍、音效、是否自動進入測驗」等。</div>
+  </main>
+
+  <!-- 右側：排行榜 / 錯題型 / 歷程 -->
+  <aside class="right-col">
+    <div class="card section" id="panelLeaderboardLocal">
+      <h3>📊 排行榜（本機）</h3>
+      <div class="list" id="localRanks"></div>
+      <div class="tiny">只記錄此裝置上的最佳成績。</div>
+    </div>
+
+    <div class="card section hidden" id="panelLeaderboardCloud">
+      <h3>🌐 排行榜（雲端房間）</h3>
+      <div class="list" id="cloudRanks"></div>
+      <div class="tiny">使用 Firebase（選填）。老師可在 ⚙️ 設定貼上 Firebase 設定並輸入房間代碼。</div>
+    </div>
+
+    <div class="card section">
+      <h3>🧠 常錯題型雷達</h3>
+      <div class="tiny">四大型態：(-a)+b、a+(-b)、(-a)+(-b)、(-a)-b</div>
+      <div class="list" id="errorTypes"></div>
+    </div>
+
+    <div class="card section">
+      <h3>📜 最近答題</h3>
+      <div class="list" id="recentLog"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- 設定對話框 -->
+<div id="settingsModal" class="hidden" style="position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,0.4);">
+  <div class="card" style="width:min(760px,95vw); max-height:90vh; overflow:auto;">
+    <h3>⚙️ 設定</h3>
+    <div style="display:grid; gap:10px;">
+      <div class="row">
+        <label class="label">數值範圍（含負數）：</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span>最小</span><input id="minVal" type="number" value="-10" style="width:100px">
+          <span>最大</span><input id="maxVal" type="number" value="10" style="width:100px">
+        </div>
+      </div>
+      <div class="row" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap">
+        <label><input id="soundOn" type="checkbox" checked> 啟用音效</label>
+        <label><input id="autoExam" type="checkbox" checked> 熟練度 ≥80% 時自動解鎖測驗</label>
+        <label><input id="showNumlinePractice" type="checkbox" checked> 練習模式顯示數線</label>
+      </div>
+      <div class="row">
+        <div class="label">熟練度計算說明：</div>
+        <div class="tiny">以最近 50 題的正確率為基礎；錯題複習命中可加速提升熟練度。</div>
+      </div>
+      <hr/>
+      <details>
+        <summary>（進階）Firebase 雲端排行榜（選填）</summary>
+        <div class="tiny">貼上 Firebase Web App 設定；輸入房間代碼（例如：ee1b-114），儲存後即啟用雲端排行榜。</div>
+        <textarea id="firebaseConfig" rows="6" style="width:100%; font-family:ui-monospace,monospace" placeholder='例如：{"apiKey":"...","authDomain":"...","databaseURL":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+        <div style="display:flex; gap:10px; align-items:center; margin-top:6px">
+          <span>房間代碼</span><input id="roomCode" type="text" placeholder="例如：EE1B-114" />
+          <button id="btnTestCloud" class="ghost">測試連線</button>
+        </div>
+        <div id="cloudStatus" class="tiny"></div>
+      </details>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px">
+        <button id="btnReset" class="flat">清除本機資料</button>
+        <button id="btnCloseSettings">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================
+   狀態與持久化
+======================= */
+const state = {
+  mode: 'practice', // practice | review | exam
+  a: 0, b: 0, sign: '+', // 目前題目
+  answer: null,
+  showNumline: true,
+  settings: {
+    minVal: -10, maxVal: 10,
+    soundOn: true,
+    autoExam: true,
+    showNumlinePractice: true,
+    firebaseConfig: null,
+    roomCode: ''
+  },
+  user: {
+    nickname: ''
+  },
+  score: 0,
+  streak: 0,
+  best: 0,
+  history: [], // {a,b,sign,correct,ans,ts}
+  errorBucket: { // 錯題型態統計
+    "(-a)+b": 0,
+    "a+(-b)": 0,
+    "(-a)+(-b)": 0,
+    "(-a)-b": 0
+  },
+  reviewQueue: [], // 優先抽錯題
+  cloud: { enabled:false, app:null, db:null }
+};
+
+const LS_KEY = 'neg_add_sub_v1';
+
+function save(){
+  const data = {
+    settings: state.settings,
+    user: state.user,
+    score: state.score,
+    streak: state.streak,
+    best: state.best,
+    history: state.history.slice(-200), // 保留最近 200 題
+    errorBucket: state.errorBucket
+  };
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.assign(state.settings, data.settings||{});
+    Object.assign(state.user, data.user||{});
+    state.score = data.score||0;
+    state.streak = data.streak||0;
+    state.best = data.best||0;
+    state.history = Array.isArray(data.history)? data.history : [];
+    state.errorBucket = Object.assign(state.errorBucket, data.errorBucket||{});
+  }catch(e){}
+}
+
+/* =======================
+   工具：音效（純 WebAudio，免檔案）
+======================= */
+let audioCtx;
+function beep(type='good'){
+  if(!state.settings.soundOn) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    if(type==='good'){ o.frequency.value = 880; }
+    else if(type==='bad'){ o.frequency.value = 200; }
+    else { o.frequency.value = 520; }
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.2);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+0.22);
+  }catch(e){}
+}
+
+/* =======================
+   題目產生、型態分類
+======================= */
+function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function classifyType(a, sign, b){
+  const Aneg = a<0, Bneg = b<0;
+  if(sign==='+'){
+    if(Aneg && !Bneg) return "(-a)+b";
+    if(!Aneg && Bneg) return "a+(-b)";
+    if(Aneg && Bneg) return "(-a)+(-b)";
+  }else{ // '-'
+    if(a<0 && b>0) return "(-a)-b";
+    if(a<0 && b<0) return "(-a)-(-b)"; // 次要：不列為四大監控但保留參考
+    if(a>=0 && b>=0) return "a-b";      // 次要
+    if(a>=0 && b<0) return "a-(-b)";    // 次要
+  }
+  return "其他";
+}
+
+// 依需求專注「負數加減」：保證至少一個為負
+function genProblem(){
+  const {minVal,maxVal} = state.settings;
+  let a=0,b=0,sign = Math.random()<0.5 ? '+' : '-';
+  do{
+    a = randInt(minVal, maxVal);
+    b = randInt(minVal, maxVal);
+  }while(!(a<0 || b<0) || (a===0 && b===0)); // 至少一個負，且避免 0+0
+  return {a, sign, b};
+}
+
+/* =======================
+   UI 綁定
+======================= */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+const elA = $('#opA'), elB = $('#opB'), elSign = $('#opSign');
+const elAns = $('#answer'), elSubmit = $('#btnSubmit'), elSkip = $('#btnSkip');
+const elNext = $('#btnNext'), elShowSteps = $('#btnShowSteps');
+const elMsg = $('#resultMsg');
+const elScore = $('#score'), elStreak = $('#streak'), elBest = $('#best'), elMastery = $('#mastery');
+const elNickname = $('#nickname');
+const elNumline = $('#numline'), elNumlineWrap = $('#numlineWrap');
+
+function updateHeader(){
+  elScore.textContent = state.score;
+  elStreak.textContent = state.streak;
+  elBest.textContent = state.best;
+  elMastery.textContent = Math.round(calcMastery()*100)+'%';
+  elNickname.value = state.user.nickname||'';
+}
+
+function setProblem(p){
+  state.a = p.a; state.sign = p.sign; state.b = p.b;
+  elA.textContent = p.a; elB.textContent = p.b; elSign.textContent = p.sign;
+  elAns.value = ''; elAns.focus();
+  elMsg.textContent = '';
+  elNext.classList.add('hidden');
+  elShowSteps.classList.add('hidden');
+  // 數線顯示控制
+  const show = (state.mode==='practice' && state.settings.showNumlinePractice) || (state.mode==='review');
+  state.showNumline = show;
+  elNumlineWrap.classList.toggle('hidden', !show);
+  if(show) drawNumberLine(p.a, p.sign, p.b, null, true);
+}
+
+function nextProblem(){
+  // 若有 reviewQueue，先出複習題
+  if((state.mode==='review') && state.reviewQueue.length>0){
+    const q = state.reviewQueue.shift();
+    setProblem(q);
+    return;
+  }
+  if(state.mode==='review' && state.reviewQueue.length===0){
+    // 沒東西就回練習
+    switchMode('practice');
+    return;
+  }
+  // 一般出題
+  setProblem(genProblem());
+}
+
+function calcMastery(){
+  const N = 50;
+  const recent = state.history.slice(-N);
+  if(recent.length===0) return 0;
+  const corrects = recent.filter(h=>h.correct).length;
+  return corrects / recent.length;
+}
+
+function pushHistory(rec){
+  state.history.push(rec);
+  // 構建 review queue：只把錯題推入，且避免爆量
+  if(!rec.correct){
+    state.reviewQueue.push({a:rec.a, sign:rec.sign, b:rec.b});
+    if(state.reviewQueue.length>50) state.reviewQueue.shift();
+  }
+  save();
+  renderRightPanels();
+}
+
+/* =======================
+   數線（SVG）
+======================= */
+function drawNumberLine(a, sign, b, answer=null, animate=true){
+  const {minVal, maxVal} = state.settings;
+  // 擴一些邊界，容納步進
+  const min = Math.min(minVal, a, a+(sign==='+'?b:-b)) - 1;
+  const max = Math.max(maxVal, a, a+(sign==='+'?b:-b)) + 1;
+  const w = 780, h = 130, pad=40;
+  const scale = x => pad + (x - min) * ( (w - 2*pad) / (max - min) );
+
+  const result = sign==='+' ? (a + b) : (a - b);
+  const steps = (sign==='+'? b : -b); // 向右為 +，向左為 -
+  const dir = steps>=0 ? 1 : -1;
+  const nSteps = Math.abs(steps);
+
+  let ticks = '';
+  for(let x=min; x<=max; x++){
+    const X = scale(x);
+    const isZero = (x===0);
+    ticks += `
+      <line x1="${X}" y1="${h-45}" x2="${X}" y2="${h-35}" stroke="${isZero?'#c84580':'#888'}" stroke-width="${isZero?2:1}" />
+      <text x="${X}" y="${h-18}" text-anchor="middle" font-size="12" fill="${isZero?'#c84580':'#555'}" font-weight="${isZero?700:400}">${x}</text>
+    `;
+  }
+
+  const base = `
+    <line x1="${scale(min)}" y1="${h-40}" x2="${scale(max)}" y2="${h-40}" stroke="#444" stroke-width="2" />
+    ${ticks}
+  `;
+
+  // 步進弧線
+  let arcs = '';
+  let cur = a;
+  for(let i=0;i<nSteps;i++){
+    const x1 = scale(cur);
+    const x2 = scale(cur + dir);
+    const mid = (x1+x2)/2;
+    const arcH = 24 + Math.min(i*3, 18);
+    arcs += `
+      <path d="M ${x1} ${h-42} Q ${mid} ${h-42-arcH} ${x2} ${h-42}" fill="none" stroke="${dir>0?'#7c5cff':'#ff82b1'}" stroke-width="2" marker-end="url(#arrow)"/>
+    `;
+    cur += dir;
+  }
+
+  // 當前點與答案點
+  const nowX = scale(a), resX = scale(result);
+  const dotNow = `<circle cx="${nowX}" cy="${h-40}" r="6" fill="#4b4bb5" />`;
+  const dotRes = `<circle cx="${resX}" cy="${h-40}" r="6" fill="#17b26a" />`;
+
+  elNumline.innerHTML = `
+    <defs>
+      <marker id="arrow" markerWidth="12" markerHeight="12" refX="8" refY="6" orient="auto-start-reverse">
+        <path d="M0,0 L12,6 L0,12 z" fill="${dir>0?'#7c5cff':'#ff82b1'}"></path>
+      </marker>
+    </defs>
+    ${base}
+    ${arcs}
+    ${dotNow}
+    ${answer===null? '' : dotRes}
+  `;
+}
+
+/* =======================
+   檢查答案、計分
+======================= */
+function submitAnswer(){
+  const userAns = Number(elAns.value);
+  if(Number.isNaN(userAns)) return;
+  const {a,b,sign} = state;
+  const correctAns = sign==='+' ? a+b : a-b;
+  const ok = (userAns===correctAns);
+
+  // 記錄
+  const rec = {a,b,sign,ans:userAns,correct:ok, ts:Date.now()};
+  pushHistory(rec);
+
+  // 錯題型態累積（針對關注的四型）
+  const typ = classifyType(a, sign, b);
+  if(state.errorBucket[typ]!==undefined && !ok){
+    state.errorBucket[typ] += 1;
+  }
+
+  if(ok){
+    beep('good');
+    state.streak += 1;
+    const bonus = 10 + Math.min(state.streak*2, 30); // 連擊加成
+    state.score += bonus;
+    elMsg.innerHTML = `✅ 正確！<span class="tiny">(+${bonus} 分)</span>`;
+    elMsg.className = 'result-msg ok';
+  }else{
+    beep('bad');
+    state.streak = 0;
+    const penalty = 3;
+    state.score = Math.max(0, state.score - penalty);
+    elMsg.innerHTML = `❌ 不正確，正解為 <b>${correctAns}</b>`;
+    elMsg.className = 'result-msg ng';
+    // 顯示步驟（數線）
+    if(!state.showNumline){
+      elShowSteps.classList.remove('hidden');
+    }else{
+      drawNumberLine(a, sign, b, correctAns, false);
+    }
+  }
+
+  // 更新最佳
+  if(state.score>state.best){ state.best = state.score; }
+
+  // 自動解鎖測驗（熟練度≥80%）
+  if(state.settings.autoExam){
+    const m = calcMastery();
+    if(m>=0.8){
+      // 顯示一個提示（不強制跳轉）
+      elMsg.innerHTML += `　🎉 恭喜！熟練度已達 <b>${Math.round(m*100)}%</b>，可以挑戰「測驗（無數線）」！`;
+    }
+  }
+
+  // 換按鈕
+  elNext.classList.remove('hidden');
+  updateHeader();
+  save();
+  renderRightPanels();
+  // 更新排行榜
+  updateLocalLeaderboard();
+  pushCloudScoreIfAny();
+}
+
+function skipQuestion(){
+  elMsg.textContent = '已略過，換一題！';
+  elMsg.className = 'result-msg';
+  state.streak = 0;
+  updateHeader();
+  nextProblem();
+}
+
+function switchMode(m){
+  state.mode = m;
+  $$('.mode-tabs button').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===m);
+  });
+  // 數線顯示依模式
+  if(state.mode==='practice'){
+    state.showNumline = !!state.settings.showNumlinePractice;
+  }else if(state.mode==='review'){
+    state.showNumline = true; // 複習一定有數線
+    // 建立複習佇列（從歷史抓錯題）
+    const wrongs = state.history.filter(h=>!h.correct).slice(-50);
+    state.reviewQueue = wrongs.map(h=>({a:h.a, sign:h.sign, b:h.b}));
+  }else{ // exam
+    state.showNumline = false;
+  }
+  nextProblem();
+}
+
+/* =======================
+   右側面板：排行榜、本機錯題、歷程
+======================= */
+function renderRightPanels(){
+  // 錯題型統計
+  const et = $('#errorTypes');
+  et.innerHTML = '';
+  const items = Object.entries(state.errorBucket);
+  if(items.every(([k,v])=>v===0)){
+    et.innerHTML = `<div class="tiny">太讚了！目前沒有明顯的常錯型態。</div>`;
+  }else{
+    for(const [k,v] of items){
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <div>${k}</div>
+        <div class="tiny">錯 <b>${v}</b> 次</div>
+      `;
+      et.appendChild(row);
+    }
+  }
+
+  // 最近答題
+  const log = $('#recentLog'); log.innerHTML='';
+  const last = state.history.slice(-10).reverse();
+  if(last.length===0){
+    log.innerHTML = `<div class="tiny">尚無資料</div>`;
+  }else{
+    last.forEach(r=>{
+      const row = document.createElement('div');
+      row.className='row';
+      const ans = r.sign==='+'? r.a+r.b : r.a-r.b;
+      row.innerHTML = `
+        <div>${r.a} ${r.sign} ${r.b} = ${ans}</div>
+        <div class="${r.correct?'ok':'ng'}">${r.correct?'✔︎':'✖︎'}</div>
+      `;
+      log.appendChild(row);
+    });
+  }
+}
+
+/* =======================
+   本機排行榜
+======================= */
+function getLocalBoard(){
+  const key = 'neg_add_sub_board_v1';
+  const raw = localStorage.getItem(key);
+  let arr = [];
+  if(raw){ try{arr = JSON.parse(raw)||[]}catch(e){} }
+  return {
+    list: arr,
+    save(newList){ localStorage.setItem(key, JSON.stringify(newList)); }
+  }
+}
+function updateLocalLeaderboard(){
+  const board = getLocalBoard();
+  const name = state.user.nickname?.trim() || '匿名學員';
+  // 更新或插入最佳
+  const existing = board.list.find(x=>x.name===name);
+  if(existing){
+    existing.score = Math.max(existing.score, state.best);
+    existing.ts = Date.now();
+  }else{
+    board.list.push({name, score: state.best, ts: Date.now()});
+  }
+  // 排序前 10
+  board.list.sort((a,b)=> b.score - a.score || a.ts - b.ts);
+  board.list = board.list.slice(0,10);
+  board.save(board.list);
+
+  // 渲染
+  const list = $('#localRanks'); list.innerHTML='';
+  if(board.list.length===0){ list.innerHTML='<div class="tiny">尚無紀錄</div>'; return; }
+  board.list.forEach((r,idx)=>{
+    const row = document.createElement('div');
+    row.className='row';
+    const medal = idx===0?'🥇': idx===1?'🥈': idx===2?'🥉':'';
+    row.innerHTML = `
+      <div>${medal?`<span class="rank-medal">${medal}</span> `:''}${r.name}</div>
+      <div><b>${r.score}</b></div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* =======================
+   測驗輔助：顯示步驟
+======================= */
+elShowSteps.addEventListener('click', ()=>{
+  drawNumberLine(state.a, state.sign, state.b, (state.sign==='+'?state.a+state.b:state.a-state.b), true);
+  elNumlineWrap.classList.remove('hidden');
+  elShowSteps.classList.add('hidden');
+});
+
+/* =======================
+   設定面板
+======================= */
+const modal = $('#settingsModal');
+$('#btnSettings').addEventListener('click', ()=>{
+  $('#minVal').value = state.settings.minVal;
+  $('#maxVal').value = state.settings.maxVal;
+  $('#soundOn').checked = state.settings.soundOn;
+  $('#autoExam').checked = state.settings.autoExam;
+  $('#showNumlinePractice').checked = state.settings.showNumlinePractice;
+  $('#firebaseConfig').value = state.settings.firebaseConfig ? JSON.stringify(state.settings.firebaseConfig) : '';
+  $('#roomCode').value = state.settings.roomCode || '';
+  $('#cloudStatus').textContent = '';
+  modal.classList.remove('hidden');
+});
+$('#btnCloseSettings').addEventListener('click', ()=> modal.classList.add('hidden'));
+$('#btnReset').addEventListener('click', ()=>{
+  if(confirm('確定清除本機學習資料與本機排行榜嗎？')){
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem('neg_add_sub_board_v1');
+    location.reload();
+  }
+});
+$('#minVal').addEventListener('change', e=>{ state.settings.minVal = Number(e.target.value); save(); });
+$('#maxVal').addEventListener('change', e=>{ state.settings.maxVal = Number(e.target.value); save(); });
+$('#soundOn').addEventListener('change', e=>{ state.settings.soundOn = !!e.target.checked; save(); });
+$('#autoExam').addEventListener('change', e=>{ state.settings.autoExam = !!e.target.checked; save(); });
+$('#showNumlinePractice').addEventListener('change', e=>{ state.settings.showNumlinePractice = !!e.target.checked; save(); });
+
+// 暱稱
+elNickname.addEventListener('change', ()=>{
+  state.user.nickname = elNickname.value.trim();
+  save(); updateLocalLeaderboard();
+});
+
+/* =======================
+   事件：答題流程
+======================= */
+elSubmit.addEventListener('click', submitAnswer);
+elAns.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitAnswer(); });
+elSkip.addEventListener('click', skipQuestion);
+elNext.addEventListener('click', ()=>{ nextProblem(); elNext.classList.add('hidden'); });
+
+$$('.mode-tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchMode(btn.dataset.mode));
+});
+
+/* =======================
+   Firebase（選填，用於雲端排行榜）
+   - 預設不載入任何外部腳本；只有使用者在設定貼入 config 並按「測試連線」才動態載入。
+======================= */
+async function ensureFirebaseLoaded(){
+  if(window.firebase && window.firebase.initializeApp) return true;
+  // 動態載入 v9 compat（簡化範例）
+  const script = document.createElement('script');
+  script.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  const script2 = document.createElement('script');
+  script2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+  document.head.appendChild(script);
+  await new Promise(res=>script.onload=res);
+  document.head.appendChild(script2);
+  await new Promise(res=>script2.onload=res);
+  return true;
+}
+
+$('#btnTestCloud').addEventListener('click', async ()=>{
+  const cfgText = $('#firebaseConfig').value.trim();
+  const room = $('#roomCode').value.trim();
+  if(!cfgText || !room){ $('#cloudStatus').textContent = '請貼上 Firebase 設定並輸入房間代碼。'; return; }
+  try{
+    const cfg = JSON.parse(cfgText);
+    await ensureFirebaseLoaded();
+    if(state.cloud.app){ state.cloud.app.delete?.(); }
+    state.cloud.app = firebase.initializeApp(cfg, 'neg-add-sub-app');
+    state.cloud.db = firebase.database();
+    state.cloud.enabled = true;
+    state.settings.firebaseConfig = cfg;
+    state.settings.roomCode = room;
+    save();
+    $('#cloudStatus').textContent = '✅ 連線成功，已啟用雲端排行榜。';
+    $('#panelLeaderboardCloud').classList.remove('hidden');
+    subscribeCloudLeaderboard();
+  }catch(e){
+    $('#cloudStatus').textContent = '❌ 連線失敗：' + e.message;
+    state.cloud.enabled = false;
+    $('#panelLeaderboardCloud').classList.add('hidden');
+  }
+});
+
+function subscribeCloudLeaderboard(){
+  if(!state.cloud.enabled) return;
+  const path = `/neg-add-sub/rooms/${state.settings.roomCode}/board`;
+  state.cloud.db.ref(path).on('value', (snap)=>{
+    const data = snap.val()||{};
+    const arr = Object.values(data).sort((a,b)=> b.score - a.score || a.ts - b.ts).slice(0,10);
+    renderCloudBoard(arr);
+  });
+}
+function renderCloudBoard(arr){
+  const list = $('#cloudRanks'); list.innerHTML='';
+  if(arr.length===0){ list.innerHTML='<div class="tiny">尚無雲端紀錄</div>'; return; }
+  arr.forEach((r,idx)=>{
+    const medal = idx===0?'🥇': idx===1?'🥈': idx===2?'🥉':'';
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `
+      <div>${medal?`<span class="rank-medal">${medal}</span> `:''}${r.name||'匿名學員'}</div>
+      <div><b>${r.score}</b></div>
+    `;
+    list.appendChild(row);
+  });
+}
+function pushCloudScoreIfAny(){
+  if(!state.cloud.enabled) return;
+  const name = state.user.nickname?.trim() || '匿名學員';
+  const path = `/neg-add-sub/rooms/${state.settings.roomCode}/board/${encodeURIComponent(name)}`;
+  state.cloud.db.ref(path).set({name, score: state.best, ts: Date.now()}).catch(()=>{});
+}
+
+/* =======================
+   初始化
+======================= */
+function init(){
+  load();
+  updateHeader();
+  updateLocalLeaderboard();
+  renderRightPanels();
+
+  // 若有雲端設定，啟用
+  if(state.settings.firebaseConfig && state.settings.roomCode){
+    (async ()=>{
+      try{
+        await ensureFirebaseLoaded();
+        state.cloud.app = firebase.initializeApp(state.settings.firebaseConfig, 'neg-add-sub-app');
+        state.cloud.db = firebase.database();
+        state.cloud.enabled = true;
+        $('#panelLeaderboardCloud').classList.remove('hidden');
+        subscribeCloudLeaderboard();
+      }catch(e){
+        state.cloud.enabled = false;
+        $('#panelLeaderboardCloud').classList.add('hidden');
+      }
+    })();
+  }
+
+  // 初始出題
+  nextProblem();
+}
+
+init();
+</script>
+</body>
+</html>
